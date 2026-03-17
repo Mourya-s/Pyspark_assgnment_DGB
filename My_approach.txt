@@ -1,0 +1,284 @@
+from pysprk.sql import sparksession
+from pyspark.functions import *
+
+spark=sparksession.builder.appname("sparksess").createorreplace()
+
+data=[(1, "iphone13"), 
+
+ (1, "dell i5 core"), 
+
+ (2, "iphone13"), 
+
+ (2, "dell i5 core"), 
+
+ (3, "iphone13"), 
+
+ (3, "dell i5 core"), 
+
+ (1, "dell i3 core"), 
+
+ (1, "hp i5 core"), 
+
+ (1, "iphone14"), 
+
+ (3, "iphone14"), 
+
+ (4, "iphone13")]
+
+df=spark.createDataframe(data,["purchase_data_df", "product_data_df"])
+
+-- question 2
+df1=df.filter(df.product_data_df=="iphone13").show()
+
+
+--question 3
+df2=df.withcoloumn("previous_perchase",lag().over(window.partionby("purchase_data_df")))
+df2.filter("previous_perchase"=="iphone14" & "purchase_data_df"=="iphone13")
+
+--question 4
+df3=df.groupby("purchase_data_df").filter(countDistict(""product_data_df"")=4)
+or [i will go with collect_set-->size()===4] this methid
+
+
+
+------------------------------------------------------------------------
+from pyspark.sql import *
+from pyspark.sql.function import *
+
+spark=SparkSession.builder.appname("xyz").getorcreate()
+
+--question 1
+credit_card_df=spark.createdatframe([("1234567891234567",), 
+("5678912345671234",), 
+("9123456712345678",), 
+("1234567812341122",), 
+("1234567812341342",) ],["card_number"])
+
+--question 
+
+x=credit_card_df.rdd.getNumPartitions().collect()[0][0]
+print(x)
+
+
+--question 3
+df1=credit_card_df.repartition(x+5)
+
+
+--question 4
+df2=credit_card_df.colasec(x)
+
+
+--question 5
+demo_udf=udf(lambds x: concat(df.repeat("*",length("card_number")-4), df.substring("card_number",-4,length("card_number")), stringInteger())
+
+--question 6
+df.withcolumn("Masked_card_number",demo_udf("card_number"))
+
+------------------------------------------------------------------------
+
+from pyspark.sql import *
+from pyspark.sql.function import *
+
+spark=SparkSession.builder.appname("xyz").getorcreate()
+
+schema=spark.structType([structfield(logid, IntergerTpye() , true),
+			structfield(Userid, IntergerType() , true),
+			structfield(action, stringTpye() , true),
+			structfield(timestamp, timestamp() , true) ]
+									)
+data = [ 
+(1, 101, 'login', '2023-09-05 08:30:00'), 
+(2, 102, 'click', '2023-09-06 12:45:00'), 
+(3, 101, 'click', '2023-09-07 14:15:00'), 
+(4, 103, 'login', '2023-09-08 09:00:00'), 
+(5, 102, 'logout', '2023-09-09 17:30:00'), 
+(6, 101, 'click', '2023-09-10 11:20:00'), 
+(7, 103, 'click', '2023-09-11 10:15:00'), 
+(8, 102, 'click', '2023-09-12 13:10:00') 
+] 
+-- Q1
+df=spark.createdataframe(data,schema)
+
+--Q2
+df=df.withcoloumnrenamed("log id","log_id") |||ly for every thing
+
+--Q3
+df.groupby("log_id").sum("user_activity").filter((diffDate(current_date(),timestame()))<7).show()
+
+--Q4
+x=df.withcolumn("login_date",todate("login_date"))
+df1=df.witcolumn("login_date",dateformat("login_date",yyyy-MM-DD))
+
+--Q5
+df2=df.write.option("mode","overwrite").csv("/patg/data/new_db")
+
+
+
+--Q6
+spark.sql("""
+	create table user.login_details(
+--col schema--
+)
+	using csv
+	
+""")
+
+df.write.option("mode","overwite").csv("user.login_tables")
+
+
+
+
+------------------------------------------------------------------------
+
+{
+	"id": 1001,
+	"properties": {
+		"name": "ABC Pvt Ltd",
+		"storeSize": "Medium"
+	},
+	"employees": [
+		{
+			"empId": 1001,
+			"empName": "Divesh"
+		},
+		{
+			"empId": 1002,
+			"empName": "Rajesh"
+		},
+		{
+			"empId": 1003,
+			"empName": "David"
+		}
+	]
+}
+
+from pyspark.sql import *
+from pyspark.sql.function import *
+
+spark=SparkSession.builder.appname("xyz").getorcreate()
+
+--Q1
+df=spark.read.json("path/....")
+
+--q2
+df2=df.select("id","properties.name","properties.storesize".aliad("xyz"),"employees.empid".alias("employee id"),"employees.empNmae".alias("emp name"))
+
+
+--Q3
+print(df.count(*))
+print(df2.count(*)) # this will have more number of rows
+
+--Q4
+df2=df.withcolumn("prope",explode("properties")).withcolumn("employees",explode(employees))  ||ly rest
+
+--Q5
+df2.filter(col(id)==1).show()
+
+--Q6
+df.withcolumnrenamed("old_name","new name")
+
+--Q7
+df.withcolumn("load_date",current_date())
+
+--Q8
+df.select(year("load_date").alias("year"),month("load_date").alias("month"),day("load_date").alias("day")).show()
+
+
+--Q9
+spark.sql"""
+	create table employee.employee_details(
+col -data
+) 
+using json"""
+
+df.write.option("mode","overwrite").partitionby("year","month","day").json("employee.emloyeepath")
+
+
+
+--------------------------------------------------------------------------
+
+spark=spark.structType([
+	structfield("employee id", integertype(),true),
+	structfield("employee_name", stringtype(),true),
+	structfield("deperatment, stringtype(),true),
+	structfield("state", integertype(),true),
+	structfield("salary", integertype(),true)
+	structfield("age", integertype(),true)
+
+	
+])
+
+data=[((11,“james”,” D101”,”ny”,9000,34)), 
+
+(12,”michel”,” D101”,”ny”,8900,32), 
+
+(13,“robert”,” D102”,”ca”,7900,29), 
+
+(14,“scott”,” D103”,”ca”,8000,36), 
+
+(15,“jen”,” D102”,”ny”,9500,38), 
+
+(16,”jeff”,” D103”,”uk”,9100,35), 
+
+(17,“maria”,” D101”,”ny”,7900,40)) ]
+
+
+--Q1
+df=spark.createdataframe(data,schema)
+|||ly I will do for others
+
+--Q2
+df=df.groupby("department").avg("salary")
+
+--Q3
+df=df.filter(col(employees_name).like("m%"))).show()
+or I will go--> .with startswith("m")
+
+--Q4
+df.withcolumn("employee_df", col("slalary")*2).show()
+
+--Q5
+df=df.select("mployee_id","employee_name","salary","State",Age","department")
+
+
+
+--Q6
+df=employee_df.join("depertment_df",employee_df.depatment=department.dept_id,inner")
+
+
+--Q7
+x=employee_df.join("country_df",employee_df.sate=count_df.country_code,left_join)
+new_df=x.select("what all th ecolumns needed","contry_code")
+
+--Q8
+
+df3=new_df.withcouln("employee_name",upper("emplyee_name")).withcolumn("load_date",current_date())
+
+--Q9
+sparl.sql("""
+create external table db_1.table_1
+using praquet
+location="path"
+""")
+sparl.sql("""
+create external table db_1.table_2
+using csv
+location="path"
+""")
+
+df=df.write.csv(" db_1.table_2 ")
+df.write.option("mode","append").praquet("db_1.table_1 ")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
